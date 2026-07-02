@@ -1,0 +1,87 @@
+// Wappr — Prisma schema
+// SQLite database lives at ./data/app.db (gitignored, created at runtime).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// One singleton row — id is always 1. There is only ever one WhatsApp session.
+model Session {
+  id          Int      @id @default(1)
+  status      String // "UNLINKED" | "QR_PENDING" | "AUTHENTICATED" | "EXPIRED"
+  phoneNumber String?
+  updatedAt   DateTime @updatedAt
+}
+
+model BulkJob {
+  id          String             @id @default(cuid())
+  type        String // "BULK_TEXT" | "BULK_MEDIA" | "BULK_MEDIA_CUSTOM"
+  status      String // "RUNNING" | "COMPLETED" | "FAILED" | "PAUSED"
+  total       Int
+  sent        Int                @default(0)
+  failed      Int                @default(0)
+  // Randomized per-send delay window (seconds). Min is locked at 5; the user
+  // drags the max (up to 60). Each send waits a random time in [min, max].
+  minDelaySec Int                @default(5)
+  maxDelaySec Int                @default(15)
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  recipients  BulkJobRecipient[]
+
+  // Set when this job was produced by a Schedule fire (null for manual sends).
+  scheduleId  String?
+  schedule    Schedule?          @relation(fields: [scheduleId], references: [id])
+
+  @@index([scheduleId])
+}
+
+// A saved bulk campaign that fires on a timer — once at a set time, or on a
+// recurring interval. Each fire clones the frozen recipient snapshot into a new
+// BulkJob, which the normal in-process worker then runs. Schedules live in the
+// DB so they survive restarts; an in-process ticker watches `nextRunAt`.
+model Schedule {
+  id             String    @id @default(cuid())
+  name           String
+  type           String // "BULK_TEXT" | "BULK_MEDIA" | "BULK_MEDIA_CUSTOM"
+  status         String // "ACTIVE" | "PAUSED" | "COMPLETED" | "CANCELLED"
+  mode           String // "ONE_TIME" | "RECURRING"
+
+  // Recurrence config (all null for ONE_TIME).
+  intervalKind   String? // "MINUTE" | "HOUR" | "DAY" | "WEEK"
+  intervalN      Int? // "every N" for MINUTE/HOUR
+  atTime         String? // "HH:MM" (server local) for DAY/WEEK
+  weekday        Int? // 0-6, Sunday=0, for WEEK
+
+  nextRunAt      DateTime // the ticker's watch field
+  lastRunAt      DateTime?
+  endAt          DateTime? // optional hard stop
+  maxRuns        Int? // optional stop after N fires
+  runCount       Int       @default(0)
+
+  // Frozen, attachment-resolved recipient snapshot + the per-send delay window.
+  minDelaySec    Int       @default(5)
+  maxDelaySec    Int       @default(15)
+  recipientsJson String // JSON: [{ number, message, attachmentUrl, status, error }]
+
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  jobs           BulkJob[]
+
+  @@index([status, nextRunAt])
+}
+
+model BulkJobRecipient {
+  id            String  @id @default(cuid())
+  jobId         String
+  job           BulkJob @relation(fields: [jobId], references: [id])
+  number        String
+  message       String?
+  attachmentUrl String?
+  status        String // "PENDING" | "SENT" | "FAILED"
+  error         String?
+}
