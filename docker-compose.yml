@@ -1,0 +1,41 @@
+# Wappr — one-command deploy.
+#
+#   docker compose up -d --build
+#
+# Then open http://localhost:3000 and scan the QR code. The three named volumes
+# persist your SQLite data, WhatsApp login session, and web cache across
+# restarts and rebuilds — do not delete them unless you want to re-link.
+
+services:
+  wappr:
+    build: .
+    container_name: wappr
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # SQLite path is resolved relative to prisma/, so this lands at data/app.db.
+      DATABASE_URL: "file:../data/app.db"
+
+      # QR login timeout (ms) before a pending login is torn down.
+      QR_TIMEOUT_MS: "90000"
+
+      # WhatsApp "No LID for user" workaround. Set to "off" to disable.
+      LID_WORKAROUND: "on"
+
+      # --- Auth (STRONGLY recommended for any networked deploy) --------------
+      # Uncomment and set these to require a login. SESSION_SECRET is required
+      # once APP_PASSWORD is set. Generate a secret with:
+      #   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+      # APP_PASSWORD: "change-me"
+      # SESSION_SECRET: ""
+      # API_TOKEN: ""
+    volumes:
+      - wappr_data:/app/data
+      - wappr_auth:/app/.wwebjs_auth
+      - wappr_cache:/app/.wwebjs_cache
+
+volumes:
+  wappr_data:
+  wappr_auth:
+  wappr_cache:

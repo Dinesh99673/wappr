@@ -1,0 +1,29 @@
+# Keep the build context small and never bake secrets or runtime state in.
+node_modules
+.next
+out
+build
+
+# Runtime state — must come from mounted volumes, never the image.
+data
+.wwebjs_auth
+.wwebjs_cache
+*.db
+*.sqlite
+*.sqlite3
+
+# Secrets / local env
+.env
+.env.*
+!.env.example
+
+# VCS / tooling / misc
+.git
+.gitignore
+*.tsbuildinfo
+npm-debug.log*
+.DS_Store
+test-data.csv
+Dockerfile
+docker-compose.yml
+README.md

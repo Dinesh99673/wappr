@@ -6,6 +6,15 @@ Wappr is an open-source, single-codebase Next.js app that lets you log in with y
 own WhatsApp account and send single or bulk messages (text and media) from a simple
 dashboard. Clone it, run it, scan a QR code, and go. No external services required.
 
+```bash
+git clone https://github.com/Dinesh99673/wappr.git
+cd wappr
+docker compose up -d --build   # or, without Docker: npm install && npm run build && npm start
+```
+
+Then open <http://localhost:3000> and scan the QR code. Full setup — including the
+manual Node path and configuration — is in [Setup](#setup) below.
+
 ---
 
 ## ⚠️ Read this first
@@ -90,9 +99,45 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
   may also need common headless-Chromium libs (e.g. `libnss3`, `libatk-1.0-0`,
   `libgbm1`, `libasound2`, …).
 
-### 1. Install
+There are two ways to run Wappr. **Docker is the easy path** (all the Chromium
+libraries above are already baked into the image); the **manual Node path** works
+too if you'd rather not use Docker. Pick one.
+
+---
+
+## Quick start with Docker (recommended)
+
+The fastest way to a running instance — no manual Chromium-library wrangling.
+Requires only Docker + Docker Compose.
 
 ```bash
+git clone https://github.com/Dinesh99673/wappr.git
+cd wappr
+docker compose up -d --build
+```
+
+Open <http://localhost:3000>, click **Login to WhatsApp**, and scan the QR code
+(WhatsApp → Settings → Linked Devices → Link a Device).
+
+- Three named volumes (`wappr_data`, `wappr_auth`, `wappr_cache`) persist your
+  SQLite database, WhatsApp login session, and web cache across restarts and
+  rebuilds — so you only scan the QR once.
+- Migrations run automatically on every boot (`prisma migrate deploy`).
+- To enable auth, uncomment `APP_PASSWORD` / `SESSION_SECRET` (and optionally
+  `API_TOKEN`) in [`docker-compose.yml`](docker-compose.yml), then re-run the
+  command above.
+- Logs: `docker compose logs -f`. Stop: `docker compose down` (add `-v` only if
+  you truly want to wipe the volumes and re-link).
+
+---
+
+## Manual setup (Node, no Docker)
+
+### 1. Clone and install
+
+```bash
+git clone https://github.com/Dinesh99673/wappr.git
+cd wappr
 npm install
 ```
 
