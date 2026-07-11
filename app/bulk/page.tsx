@@ -158,7 +158,7 @@ export default function BulkPage() {
   return (
     <form onSubmit={submit} className="card p-6 space-y-6">
       <p className="text-sm muted -mt-1">
-        Messages are sent one at a time with a randomized delay to reduce ban risk.
+        Messages are sent one at a time with a randomized delay so sending stays paced.
       </p>
 
       {/* Job type selector */}
@@ -252,7 +252,7 @@ export default function BulkPage() {
           Drag the handle to set the upper limit (up to {MAX_DELAY_SEC}s). After each
           message, the app waits a <strong className="text-[var(--text)]">random</strong> time
           somewhere between {MIN_DELAY_SEC}s and {maxDelaySec}s before sending the next one —
-          the randomness helps reduce ban risk.
+          the randomness keeps sending paced and natural.
         </p>
       </div>
 
@@ -363,7 +363,7 @@ export default function BulkPage() {
                     )}
                   </div>
                   <p className="text-xs muted">
-                    Minimum interval is {MIN_RECURRING_INTERVAL_MIN} minutes (ban-risk
+                    Minimum interval is {MIN_RECURRING_INTERVAL_MIN} minutes (rate
                     guardrail). Times use the server&apos;s local timezone.
                   </p>
                 </div>
@@ -406,8 +406,8 @@ export default function BulkPage() {
             <div className="flex items-start gap-2 text-xs text-amber-500">
               <Icon name="warning" className="w-4 h-4 shrink-0 mt-0.5" />
               <span>
-                Repeatedly sending the same message to the same list is a common cause of
-                WhatsApp bans. Keep frequency low and lists consent-based.
+                Keep frequency low and only message consent-based lists that expect to
+                hear from you.
               </span>
             </div>
           </div>

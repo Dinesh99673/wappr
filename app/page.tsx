@@ -252,10 +252,9 @@ export default function DashboardHome() {
           <div className="card p-5 border-amber-500/40">
             <div className="flex items-center gap-2 mb-2">
               <Icon name="warning" className="w-4 h-4 text-amber-500" />
-              <h2 className="font-semibold text-sm">Stay under the radar</h2>
+              <h2 className="font-semibold text-sm">Good sending habits</h2>
             </div>
             <ul className="text-xs muted space-y-1.5 list-disc list-inside">
-              <li>Use a secondary / test number, not your primary line.</li>
               <li>Keep volumes low and delays generous.</li>
               <li>Only message contacts who expect to hear from you.</li>
             </ul>

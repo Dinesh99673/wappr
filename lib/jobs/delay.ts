@@ -2,7 +2,7 @@
  * Bulk-send delay window (seconds).
  *
  * The lower bound is LOCKED at 5s — that's the floor we always keep between
- * sends to reduce ban risk. The user picks the upper bound (via the slider on
+ * sends so sending stays paced. The user picks the upper bound (via the slider on
  * the bulk page) anywhere from just above the floor up to MAX_DELAY_SEC. Each
  * send then waits a random time in [minSec, maxSec].
  */

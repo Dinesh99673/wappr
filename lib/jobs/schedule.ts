@@ -8,7 +8,7 @@ export type ScheduleMode = "ONE_TIME" | "RECURRING";
 export type IntervalKind = "MINUTE" | "HOUR" | "DAY" | "WEEK";
 export type BulkJobType = "BULK_TEXT" | "BULK_MEDIA" | "BULK_MEDIA_CUSTOM";
 
-/** Ban-risk guardrail: recurring schedules may not fire faster than this. */
+/** Rate guardrail: recurring schedules may not fire faster than this. */
 export const MIN_RECURRING_INTERVAL_MIN = 15;
 
 const WEEKDAY_NAMES = [
@@ -149,7 +149,7 @@ export function normalizeTiming(
     const minutes = kind === "MINUTE" ? n : n * 60;
     if (minutes < MIN_RECURRING_INTERVAL_MIN) {
       return {
-        error: `To reduce ban risk, recurring schedules can't fire more often than every ${MIN_RECURRING_INTERVAL_MIN} minutes.`,
+        error: `Recurring schedules can't fire more often than every ${MIN_RECURRING_INTERVAL_MIN} minutes.`,
       };
     }
     rec = { intervalKind: kind, intervalN: n, atTime: null, weekday: null };

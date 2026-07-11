@@ -9,27 +9,120 @@ dashboard. Clone it, run it, scan a QR code, and go. No external services requir
 ```bash
 git clone https://github.com/Dinesh99673/wappr.git
 cd wappr
-docker compose up -d --build   # or, without Docker: npm install && npm run build && npm start
+npm install && npm run build && npm start   # or, with Docker: docker compose up -d --build
 ```
 
-Then open <http://localhost:3000> and scan the QR code. Full setup — including the
-manual Node path and configuration — is in [Setup](#setup) below.
+Then open <http://localhost:3000> and scan the QR code.
+
+> ⚠️ Built on the **unofficial** whatsapp-web.js — not affiliated with or endorsed by
+> WhatsApp / Meta. Use responsibly and at your own risk.
+
+---
+
+## Setup
+
+Two ways to run Wappr — **pick one.** The **manual Node path** is first; **Docker** is
+below and is the easy path if you'd rather not install Chromium's system libraries
+yourself.
+
+### Requirements
+
+- Node.js 18+ (tested on Node 22)
+- A system Chromium/Chrome that Puppeteer can use. `whatsapp-web.js` pulls in Puppeteer,
+  which downloads a compatible Chromium on install. On a slim server you may also need
+  common headless-Chromium libs (e.g. `libnss3`, `libatk-1.0-0`, `libgbm1`,
+  `libasound2`, …). *(The Docker path handles all of these for you.)*
+
+---
+
+### Option A — Manual setup (Node)
+
+#### 1. Clone and install
+
+```bash
+git clone https://github.com/Dinesh99673/wappr.git
+cd wappr
+npm install
+```
+
+#### 2. Configure environment
+
+Copy the example and adjust as needed:
+
+```bash
+cp .env.example .env
+```
+
+`.env.example`:
+
+```dotenv
+# SQLite database location. Path is resolved relative to the prisma/ directory,
+# so "../data/app.db" places the DB at the project root's data/ folder.
+DATABASE_URL="file:../data/app.db"
+
+# Bulk send pacing is configured per-job on the Bulk page: the minimum wait
+# between sends is locked at 5s and you drag a slider to set the maximum (up to
+# 60s). Each send then waits a random time in that window so sending stays paced.
+
+# QR login timeout (milliseconds). If no scan happens in this window, the pending
+# login is torn down and the session returns to UNLINKED.
+QR_TIMEOUT_MS=90000
+```
+
+#### 3. Create the database
+
+```bash
+npx prisma migrate deploy
+```
+
+#### 4. Build and run
+
+```bash
+npm run build
+npm start
+```
+
+Open <http://localhost:3000>, click **Login to WhatsApp**, and scan the QR code with
+your phone (WhatsApp → Settings → Linked Devices → Link a Device).
+
+For local development: `npm run dev`.
+
+---
+
+### Option B — Docker
+
+The easy path — every Chromium library above is already baked into the image. Requires
+only Docker + Docker Compose.
+
+```bash
+git clone https://github.com/Dinesh99673/wappr.git
+cd wappr
+docker compose up -d --build
+```
+
+Open <http://localhost:3000>, click **Login to WhatsApp**, and scan the QR code
+(WhatsApp → Settings → Linked Devices → Link a Device).
+
+- Three named volumes (`wappr_data`, `wappr_auth`, `wappr_cache`) persist your
+  SQLite database, WhatsApp login session, and web cache across restarts and
+  rebuilds — so you only scan the QR once.
+- Migrations run automatically on every boot (`prisma migrate deploy`).
+- To enable auth, uncomment `APP_PASSWORD` / `SESSION_SECRET` (and optionally
+  `API_TOKEN`) in [`docker-compose.yml`](docker-compose.yml), then re-run the
+  command above.
+- Logs: `docker compose logs -f`. Stop: `docker compose down` (add `-v` only if
+  you truly want to wipe the volumes and re-link).
 
 ---
 
 ## ⚠️ Read this first
 
-### 1. Ban-risk disclaimer
+### 1. Unofficial client
 
 Wappr is built on **whatsapp-web.js**, an **unofficial, reverse-engineered** client —
-**not** the official WhatsApp Business API. Automating and bulk-sending messages this
-way **violates WhatsApp's Terms of Service and can get your number flagged or
-permanently banned.**
-
-- Use at your own risk.
-- Strongly prefer a **secondary / test number**, not your primary line.
-- Keep volumes low and delays generous (set the delay window on the Bulk page).
-- This tool exists for legitimate, consent-based messaging. Don't use it for spam.
+**not** the official WhatsApp Business API, and **not affiliated with or endorsed by
+WhatsApp / Meta**. Automating messages is against WhatsApp's Terms of Service, so use
+Wappr responsibly, for legitimate consent-based messaging, and at your own risk.
 
 ### 2. This does **NOT** run on Vercel
 
@@ -86,102 +179,6 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
   one at a time, with a randomized delay between each, and the session is re-checked
   before every send. If the session drops mid-job, the job **pauses** and can be
   **resumed** after you log back in.
-
----
-
-## Setup
-
-### Requirements
-
-- Node.js 18+ (tested on Node 22)
-- A system Chromium/Chrome that Puppeteer can use. `whatsapp-web.js` pulls in Puppeteer,
-  which downloads a compatible Chromium on install. On a slim server/Docker image you
-  may also need common headless-Chromium libs (e.g. `libnss3`, `libatk-1.0-0`,
-  `libgbm1`, `libasound2`, …).
-
-There are two ways to run Wappr. **Docker is the easy path** (all the Chromium
-libraries above are already baked into the image); the **manual Node path** works
-too if you'd rather not use Docker. Pick one.
-
----
-
-## Quick start with Docker (recommended)
-
-The fastest way to a running instance — no manual Chromium-library wrangling.
-Requires only Docker + Docker Compose.
-
-```bash
-git clone https://github.com/Dinesh99673/wappr.git
-cd wappr
-docker compose up -d --build
-```
-
-Open <http://localhost:3000>, click **Login to WhatsApp**, and scan the QR code
-(WhatsApp → Settings → Linked Devices → Link a Device).
-
-- Three named volumes (`wappr_data`, `wappr_auth`, `wappr_cache`) persist your
-  SQLite database, WhatsApp login session, and web cache across restarts and
-  rebuilds — so you only scan the QR once.
-- Migrations run automatically on every boot (`prisma migrate deploy`).
-- To enable auth, uncomment `APP_PASSWORD` / `SESSION_SECRET` (and optionally
-  `API_TOKEN`) in [`docker-compose.yml`](docker-compose.yml), then re-run the
-  command above.
-- Logs: `docker compose logs -f`. Stop: `docker compose down` (add `-v` only if
-  you truly want to wipe the volumes and re-link).
-
----
-
-## Manual setup (Node, no Docker)
-
-### 1. Clone and install
-
-```bash
-git clone https://github.com/Dinesh99673/wappr.git
-cd wappr
-npm install
-```
-
-### 2. Configure environment
-
-Copy the example and adjust as needed:
-
-```bash
-cp .env.example .env
-```
-
-`.env.example`:
-
-```dotenv
-# SQLite database location. Path is resolved relative to the prisma/ directory,
-# so "../data/app.db" places the DB at the project root's data/ folder.
-DATABASE_URL="file:../data/app.db"
-
-# Bulk send pacing is configured per-job on the Bulk page: the minimum wait
-# between sends is locked at 5s and you drag a slider to set the maximum (up to
-# 60s). Each send then waits a random time in that window to reduce ban risk.
-
-# QR login timeout (milliseconds). If no scan happens in this window, the pending
-# login is torn down and the session returns to UNLINKED.
-QR_TIMEOUT_MS=90000
-```
-
-### 3. Create the database
-
-```bash
-npx prisma migrate deploy
-```
-
-### 4. Build and run
-
-```bash
-npm run build
-npm start
-```
-
-Open <http://localhost:3000>, click **Login to WhatsApp**, and scan the QR code with
-your phone (WhatsApp → Settings → Linked Devices → Link a Device).
-
-For local development: `npm run dev`.
 
 ---
 
@@ -245,41 +242,17 @@ curl -X POST http://localhost:3000/api/messages/bulk \
 
 ## Deploying
 
-### Docker
+For a full run, use the **Docker** path in [Setup → Option B](#option-b--docker) — the
+repo ships a production [`Dockerfile`](Dockerfile) and
+[`docker-compose.yml`](docker-compose.yml) with the Chromium libraries and persistent
+volumes already configured.
 
-A minimal approach — mount volumes so `data/` and `.wwebjs_auth/` survive restarts:
+Whatever host you choose:
 
-```dockerfile
-FROM node:22-slim
-# Chromium runtime deps for Puppeteer
-RUN apt-get update && apt-get install -y \
-    chromium ca-certificates fonts-liberation \
-    libnss3 libatk-bridge2.0-0 libatk1.0-0 libcups2 libdrm2 \
-    libgbm1 libasound2 libpangocairo-1.0-0 libxdamage1 libxrandr2 \
-    && rm -rf /var/lib/apt/lists/*
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY . .
-RUN npx prisma generate && npm run build
-CMD ["sh", "-c", "npx prisma migrate deploy && npm start"]
-```
-
-```bash
-docker build -t wappr .
-docker run -p 3000:3000 -v wappr-data:/app/data -v wappr-auth:/app/.wwebjs_auth wappr
-```
-
-> Enable the built-in auth (`APP_PASSWORD` + `SESSION_SECRET`) and put it behind HTTPS
-> (reverse proxy / VPN / firewall) before exposing it. See the "Authentication is
-> optional and off by default" section above.
-
-### Railway / Render / VPS
-
-- Set the same `.env` variables.
-- Run `npx prisma migrate deploy` on deploy, then `npm run build && npm start`.
+- Set your `.env` variables (and enable auth — `APP_PASSWORD` + `SESSION_SECRET` — before
+  exposing it to a network, behind HTTPS / a reverse proxy / VPN / firewall).
+- Run `npx prisma migrate deploy` on deploy, then `npm run build && npm start`
+  (the Docker image does this for you).
 - On **Render**, attach a **persistent disk** and point `data/` and `.wwebjs_auth/` at
   it — the default ephemeral filesystem will lose your session on every deploy.
 
