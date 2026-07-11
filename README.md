@@ -283,3 +283,8 @@ components/JobView.tsx      # shared live-progress + detail view
 data/                      # SQLite db (gitignored, created at runtime)
 .wwebjs_auth/              # WhatsApp session (gitignored, created at runtime)
 ```
+
+## License
+
+MIT — see [LICENSE](LICENSE). Clone it, deploy it, modify it; just keep the
+copyright notice.
