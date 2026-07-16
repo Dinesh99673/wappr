@@ -1,0 +1,19 @@
+{
+  "name": "sppu-watch",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Polls the SPPU online results portal for a single seat number and notifies over WhatsApp via Wappr.",
+  "scripts": {
+    "watch": "node watch.mjs",
+    "once": "node watch.mjs --once"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "pdf-to-png-converter": "^4.1.1",
+    "playwright": "^1.49.1"
+  },
+  "optionalDependencies": {
+    "@anthropic-ai/sdk": "^0.68.0"
+  }
+}

@@ -2,6 +2,7 @@
 
 # dependencies
 /node_modules
+node_modules/
 /.pnp
 .pnp.*
 .yarn/*
@@ -43,6 +44,9 @@ data/
 *.db
 *.sqlite
 *.sqlite3
+
+# sppu-watch — captured results contain personal data, never commit
+scripts/sppu-watch/artifacts/
 
 # vercel
 .vercel
